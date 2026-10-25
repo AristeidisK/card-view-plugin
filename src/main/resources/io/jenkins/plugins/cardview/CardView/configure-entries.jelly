@@ -2,6 +2,12 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
   <st:include page="configure-entries.jelly" class="hudson.model.ListView"/>
   <f:section title="${%Cards}">
+    <f:entry title="${%Layout}" field="layout">
+      <f:enum>${it.displayName}</f:enum>
+    </f:entry>
+    <f:entry title="${%Pipelines per group card}" field="pipelinesPerGroup">
+      <f:number clazz="positive-number" min="1" max="10" default="5"/>
+    </f:entry>
     <f:entry title="${%Cards per row}" field="cardsPerRow">
       <f:number clazz="positive-number" min="1" max="6" default="4"/>
     </f:entry>

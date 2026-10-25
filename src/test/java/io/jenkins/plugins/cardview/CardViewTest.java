@@ -9,6 +9,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlSelect;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.jupiter.api.Test;
@@ -71,19 +72,41 @@ class CardViewTest {
         form.getInputByName("_.cardsPerRow").setValue("3");
         form.getInputByName("_.groupPattern").setValue("^(\\w+)-");
         form.getInputByName("_.showSyntheticStages").setChecked(true);
+        HtmlSelect layout = form.getFirstByXPath("//select[option[@value='GROUPS']]");
+        layout.setSelectedAttribute(CardLayout.GROUPS.name(), true);
+        form.getInputByName("_.pipelinesPerGroup").setValue("3");
         r.submit(form);
 
         CardView saved = (CardView) r.jenkins.getView("cards");
         assertEquals(3, saved.getCardsPerRow());
         assertEquals("^(\\w+)-", saved.getGroupPattern());
         assertTrue(saved.isShowSyntheticStages());
+        assertEquals(CardLayout.GROUPS, saved.getLayout());
+        assertEquals(3, saved.getPipelinesPerGroup());
         assertTrue(saved.contains(project), "list view job selection still applies");
     }
 
     @Test
-    void pageRendersTheBoard(JenkinsRule r) throws Exception {
-        r.jenkins.addView(new CardView("cards"));
+    void pageRendersTheBoardInTheChosenLayout(JenkinsRule r) throws Exception {
+        CardView view = new CardView("cards");
+        r.jenkins.addView(view);
         HtmlPage page = r.createWebClient().goTo("view/cards/");
-        assertTrue(page.getElementById("card-view-board") != null);
+        assertEquals("JOBS", page.getElementById("card-view-board").getAttribute("data-layout"));
+
+        view.setLayout(CardLayout.GROUPS);
+        view.setPipelinesPerGroup(4);
+        page = r.createWebClient().goTo("view/cards/");
+        assertEquals("GROUPS", page.getElementById("card-view-board").getAttribute("data-layout"));
+        assertEquals("4", page.getElementById("card-view-board").getAttribute("data-pipelines-per-group"));
+    }
+
+    @Test
+    void layoutDefaultsForViewsSavedBeforeItExisted(JenkinsRule r) {
+        CardView view = new CardView("old");
+        view.setLayout(null);
+        view.setPipelinesPerGroup(0);
+        assertEquals(CardLayout.JOBS, view.getLayout());
+        assertEquals(1, view.getPipelinesPerGroup());
+        assertEquals(CardLayout.JOBS, CardLayout.fromName("nonsense"));
     }
 }

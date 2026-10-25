@@ -183,6 +183,108 @@
     return article;
   }
 
+  /* ---- one card per group ---- */
+
+  var SEVERITY = ["RUNNING", "QUEUED", "FAILED", "UNSTABLE", "ABORTED", "READY"];
+
+  /** The pipelines of a group that ran most recently, one each, oldest of them first. */
+  function latestPipelines(cards, limit) {
+    return cards
+      .filter(function (card) {
+        return card.lastBuild;
+      })
+      .sort(function (a, b) {
+        return b.lastBuild.timestamp - a.lastBuild.timestamp;
+      })
+      .slice(0, limit)
+      .reverse();
+  }
+
+  /** The most pressing status among the pipelines shown. */
+  function groupStatus(lanes) {
+    for (var i = 0; i < SEVERITY.length; i++) {
+      for (var j = 0; j < lanes.length; j++) {
+        if (lanes[j].status === SEVERITY[i]) {
+          return SEVERITY[i];
+        }
+      }
+    }
+    return "NEW";
+  }
+
+  function groupStats(cards) {
+    var stats = { runs: 0, succeeded: 0, lastSuccessTimestamp: 0 };
+    cards.forEach(function (card) {
+      stats.runs += card.stats.runs;
+      stats.succeeded += card.stats.succeeded;
+      stats.lastSuccessTimestamp = Math.max(stats.lastSuccessTimestamp, card.stats.lastSuccessTimestamp);
+    });
+    stats.successRate = stats.runs ? Math.round((stats.succeeded * 100) / stats.runs) : -1;
+    return stats;
+  }
+
+  function laneNode(card, rootUrl, now) {
+    var build = card.lastBuild;
+    var lane = el("div", "cv-lane cv-status-" + lower(card.status));
+    var title = link(rootUrl + card.url, "cv-lane-title", card.title);
+    title.title = card.fullName + (card.description ? "\n" + card.description : "");
+    lane.appendChild(title);
+
+    var result = el("div", "cv-lane-result");
+    result.appendChild(el("span", "cv-dot"));
+    var word = build.building ? "Running" : RESULT_TITLES[build.result] || build.result || "Finished";
+    result.appendChild(link(rootUrl + build.url, "cv-lane-word", word));
+    lane.appendChild(result);
+
+    var current = (build.stages || []).filter(function (s) {
+      return s.status === "RUNNING";
+    })[0];
+    if (build.building) {
+      lane.appendChild(el("div", "cv-lane-meta", "#" + build.number + " · " + (current ? current.name : "in progress")));
+      lane.appendChild(
+        el(
+          "div",
+          "cv-lane-meta",
+          duration(now - build.timestamp) +
+            (build.estimatedDurationMillis > 0 ? " of ~" + duration(build.estimatedDurationMillis) : "")
+        )
+      );
+    } else {
+      lane.appendChild(el("div", "cv-lane-meta", "#" + build.number + " · " + ago(build.timestamp + build.durationMillis, now)));
+      lane.appendChild(el("div", "cv-lane-meta", duration(build.durationMillis)));
+    }
+    if (build.cause) {
+      var cause = el("div", "cv-lane-cause", build.cause);
+      cause.title = build.cause;
+      lane.appendChild(cause);
+    }
+    lane.appendChild(stageBar(build));
+    return lane;
+  }
+
+  function groupCardNode(name, cards, rootUrl, windowDays, limit, now) {
+    var lanes = latestPipelines(cards, limit);
+    var article = el("article", "cv-card cv-group-card cv-status-" + lower(groupStatus(lanes)));
+
+    var head = el("header", "cv-card-head");
+    head.appendChild(el("h2", "cv-title cv-group-card-title", name));
+    head.appendChild(el("span", "cv-badge", STATUS_LABELS[groupStatus(lanes)] || "New"));
+    article.appendChild(head);
+    article.appendChild(el("p", "cv-desc cv-group-card-sub", tallyText(cards)));
+
+    var grid = el("div", "cv-lanes");
+    grid.style.setProperty("--cv-lanes", String(limit));
+    if (lanes.length === 0) {
+      grid.appendChild(el("div", "cv-run cv-run-empty", "Nothing has run yet"));
+    }
+    lanes.forEach(function (card) {
+      grid.appendChild(laneNode(card, rootUrl, now));
+    });
+    article.appendChild(grid);
+    article.appendChild(footer({ stats: groupStats(cards) }, windowDays, now));
+    return article;
+  }
+
   /* ---- the board ---- */
 
   function tally(cards) {
@@ -224,6 +326,20 @@
 
     if (all.length === 0) {
       fragment.appendChild(el("p", "cv-message", "No jobs in this view yet. Add some under Edit View."));
+    }
+    if (root.dataset.layout === "GROUPS") {
+      var limit = Math.max(1, parseInt(root.dataset.pipelinesPerGroup, 10) || 5);
+      var grid = el("div", "cv-grid cv-group-grid");
+      board.groups.forEach(function (group) {
+        if (group.cards.length) {
+          grid.appendChild(
+            groupCardNode(group.name || root.dataset.viewName, group.cards, rootUrl, board.statsWindowDays, limit, now)
+          );
+        }
+      });
+      fragment.appendChild(grid);
+      root.replaceChildren(fragment);
+      return;
     }
     board.groups.forEach(function (group) {
       var section = el("section", "cv-group");

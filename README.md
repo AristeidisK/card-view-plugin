@@ -22,6 +22,12 @@ The page refreshes itself and follows Jenkins' light and dark themes.
 3. Under **Cards**, choose how many cards fit on a row (1–6), how often the page refreshes, and
    optionally a **Group by** pattern. `^(\w+) - ` puts *D11b - Deploy* in a section called *D11b*
    with the title *Deploy*.
+4. Pick a **Layout**:
+   - **One card per job** (the default) gives every job its own card, as described above.
+   - **One card per group** gives each section one card, with a narrow column for each of the
+     pipelines that ran most recently (5 by default, newest on the right). Each column shows that
+     pipeline's latest run only, so a pipeline that ran five times in a row still takes one column.
+     Useful when a view covers several sites and you only want to see what each one did last.
 
 ## Extending it
 

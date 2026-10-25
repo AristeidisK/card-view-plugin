@@ -40,11 +40,16 @@ public class CardView extends ListView {
     static final int MAX_CARDS_PER_ROW = 6;
     static final int DEFAULT_REFRESH_SECONDS = 10;
     static final int MIN_REFRESH_SECONDS = 3;
+    static final int DEFAULT_PIPELINES_PER_GROUP = 5;
+    static final int MIN_PIPELINES_PER_GROUP = 1;
+    static final int MAX_PIPELINES_PER_GROUP = 10;
 
     private int cardsPerRow = DEFAULT_CARDS_PER_ROW;
     private int refreshSeconds = DEFAULT_REFRESH_SECONDS;
     private String groupPattern = "";
     private boolean showSyntheticStages;
+    private CardLayout layout = CardLayout.JOBS;
+    private int pipelinesPerGroup = DEFAULT_PIPELINES_PER_GROUP;
 
     @DataBoundConstructor
     public CardView(String name) {
@@ -92,6 +97,28 @@ public class CardView extends ListView {
         this.showSyntheticStages = showSyntheticStages;
     }
 
+    @NonNull
+    public CardLayout getLayout() {
+        return layout == null ? CardLayout.JOBS : layout;
+    }
+
+    @DataBoundSetter
+    public void setLayout(CardLayout layout) {
+        this.layout = layout == null ? CardLayout.JOBS : layout;
+    }
+
+    /** How many pipelines a group card shows when the layout is {@link CardLayout#GROUPS}. */
+    public int getPipelinesPerGroup() {
+        return pipelinesPerGroup < MIN_PIPELINES_PER_GROUP
+                ? DEFAULT_PIPELINES_PER_GROUP
+                : Math.min(pipelinesPerGroup, MAX_PIPELINES_PER_GROUP);
+    }
+
+    @DataBoundSetter
+    public void setPipelinesPerGroup(int pipelinesPerGroup) {
+        this.pipelinesPerGroup = Math.max(MIN_PIPELINES_PER_GROUP, Math.min(pipelinesPerGroup, MAX_PIPELINES_PER_GROUP));
+    }
+
     @Override
     protected void submit(StaplerRequest2 req) throws IOException, ServletException, FormException {
         super.submit(req);
@@ -100,6 +127,8 @@ public class CardView extends ListView {
         setRefreshSeconds(form.optInt("refreshSeconds", DEFAULT_REFRESH_SECONDS));
         setGroupPattern(form.optString("groupPattern", ""));
         setShowSyntheticStages(form.optBoolean("showSyntheticStages", false));
+        setLayout(CardLayout.fromName(form.optString("layout", CardLayout.JOBS.name())));
+        setPipelinesPerGroup(form.optInt("pipelinesPerGroup", DEFAULT_PIPELINES_PER_GROUP));
     }
 
     /** The cards as JSON, polled by the page every {@link #getRefreshSeconds()} seconds. */
@@ -148,6 +177,12 @@ public class CardView extends ListView {
             } catch (PatternSyntaxException e) {
                 return FormValidation.error(e.getDescription());
             }
+        }
+
+        public FormValidation doCheckPipelinesPerGroup(@QueryParameter int value) {
+            return value >= MIN_PIPELINES_PER_GROUP && value <= MAX_PIPELINES_PER_GROUP
+                    ? FormValidation.ok()
+                    : FormValidation.error("Between " + MIN_PIPELINES_PER_GROUP + " and " + MAX_PIPELINES_PER_GROUP);
         }
 
         public FormValidation doCheckCardsPerRow(@QueryParameter int value) {

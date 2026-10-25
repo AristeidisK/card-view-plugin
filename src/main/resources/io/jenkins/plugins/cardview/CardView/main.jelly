@@ -3,7 +3,10 @@
   <div id="card-view-board" class="cv-board cv-cols-${it.cardsPerRow}"
        data-cards-url="${rootURL}/${it.url}cards"
        data-root-url="${rootURL}/"
-       data-refresh-seconds="${it.refreshSeconds}">
+       data-refresh-seconds="${it.refreshSeconds}"
+       data-layout="${it.layout}"
+       data-pipelines-per-group="${it.pipelinesPerGroup}"
+       data-view-name="${it.displayName}">
     <p class="cv-message">Loading cards…</p>
   </div>
   <st:adjunct includes="io.jenkins.plugins.cardview.CardView.cards"/>
