@@ -1,0 +1,284 @@
+/*
+ * Card View. Colours come from Jenkins' own theme variables, so the cards follow the light and dark
+ * themes; the fallbacks are for older cores.
+ */
+.cv-board {
+  --cv-text: var(--text-color, #1f2933);
+  --cv-muted: var(--text-color-secondary, #6b7280);
+  --cv-card: var(--card-background, #ffffff);
+  --cv-border: var(--card-border-color, #e3e6ea);
+  --cv-panel: color-mix(in srgb, var(--cv-text) 4%, transparent);
+  --cv-link: var(--link-color, #1d6fb8);
+  --cv-ok: var(--success-color, #1e9e6a);
+  --cv-run: var(--accent-color, #2f6fde);
+  --cv-fail: var(--error-color, #d64545);
+  --cv-warn: var(--warning-color, #d98b0b);
+  --cv-off: color-mix(in srgb, var(--cv-text) 18%, transparent);
+  --cv-columns: 4;
+
+  color: var(--cv-text);
+  margin-top: 0.5rem;
+}
+
+.cv-cols-1 { --cv-columns: 1; }
+.cv-cols-2 { --cv-columns: 2; }
+.cv-cols-3 { --cv-columns: 3; }
+.cv-cols-4 { --cv-columns: 4; }
+.cv-cols-5 { --cv-columns: 5; }
+.cv-cols-6 { --cv-columns: 6; }
+
+/* ---- summary and sections ---- */
+
+.cv-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--cv-muted);
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.cv-group + .cv-group {
+  margin-top: 1.75rem;
+}
+
+.cv-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 1rem;
+  font-weight: 650;
+  margin: 0 0 0.75rem;
+}
+
+.cv-group-meta {
+  color: var(--cv-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.cv-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cv-columns), minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 1400px) {
+  .cv-cols-4 .cv-grid, .cv-cols-5 .cv-grid, .cv-cols-6 .cv-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1050px) {
+  .cv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 680px) {
+  .cv-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* ---- a card ---- */
+
+.cv-card {
+  --cv-accent: var(--cv-off);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.9rem 1rem 0.75rem;
+  background: var(--cv-card);
+  border: 1px solid var(--cv-border);
+  border-left: 3px solid var(--cv-accent);
+  border-radius: 6px;
+}
+
+.cv-status-ready { --cv-accent: var(--cv-ok); }
+.cv-status-running, .cv-status-queued { --cv-accent: var(--cv-run); }
+.cv-status-failed { --cv-accent: var(--cv-fail); }
+.cv-status-unstable { --cv-accent: var(--cv-warn); }
+
+.cv-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cv-title {
+  min-width: 0;
+  color: var(--cv-link);
+  font-size: 0.95rem;
+  font-weight: 650;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.cv-title:hover {
+  text-decoration: underline;
+}
+
+.cv-badge {
+  flex: none;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cv-accent) 14%, transparent);
+  color: color-mix(in srgb, var(--cv-accent) 75%, var(--cv-text));
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cv-desc {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--cv-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* ---- latest run ---- */
+
+.cv-run {
+  padding: 0.6rem 0.7rem 0.65rem;
+  border-radius: 5px;
+  background: var(--cv-panel);
+}
+
+.cv-run-empty {
+  color: var(--cv-muted);
+  font-size: 0.78rem;
+}
+
+.cv-run-line {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cv-dot {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--cv-accent);
+}
+
+.cv-status-running .cv-dot {
+  animation: cv-pulse 1.4s ease-in-out infinite;
+}
+
+.cv-run-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--cv-text);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cv-run-title:hover {
+  text-decoration: underline;
+}
+
+.cv-run-number {
+  margin-left: auto;
+  color: var(--cv-muted);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.cv-run-meta {
+  margin: 0.2rem 0 0.55rem 0.9rem;
+  color: var(--cv-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.cv-stages {
+  display: flex;
+  gap: 4px;
+  margin-left: 0.9rem;
+}
+
+.cv-seg {
+  flex: 1 1 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--cv-off);
+}
+
+.cv-seg-success { background: var(--cv-ok); }
+.cv-seg-failed { background: var(--cv-fail); }
+.cv-seg-unstable { background: var(--cv-warn); }
+.cv-seg-aborted { background: color-mix(in srgb, var(--cv-text) 45%, transparent); }
+.cv-seg-skipped { background: repeating-linear-gradient(90deg, var(--cv-off) 0 3px, transparent 3px 6px); }
+.cv-seg-running {
+  background: linear-gradient(90deg, var(--cv-run) 0%, color-mix(in srgb, var(--cv-run) 35%, transparent) 50%, var(--cv-run) 100%);
+  background-size: 200% 100%;
+  animation: cv-flow 1.6s linear infinite;
+}
+
+/* ---- schedule and footer ---- */
+
+.cv-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.25rem 0.9rem;
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.cv-facts dt {
+  color: var(--cv-muted);
+}
+
+.cv-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.cv-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--cv-border);
+  color: var(--cv-muted);
+  font-size: 0.7rem;
+}
+
+.cv-foot-right {
+  text-align: right;
+}
+
+/* ---- messages ---- */
+
+.cv-message {
+  color: var(--cv-muted);
+}
+
+.cv-error {
+  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--cv-fail) 12%, transparent);
+  color: var(--cv-fail);
+  font-size: 0.8rem;
+}
+
+@keyframes cv-pulse {
+  50% { opacity: 0.3; }
+}
+
+@keyframes cv-flow {
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-status-running .cv-dot, .cv-seg-running { animation: none; }
+}

@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+  A view that shows each job as a card: status, latest run with its stages, schedule and 30-day success rate.
+</div>

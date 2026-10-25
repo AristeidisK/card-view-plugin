@@ -1,0 +1,18 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
+  <st:include page="configure-entries.jelly" class="hudson.model.ListView"/>
+  <f:section title="${%Cards}">
+    <f:entry title="${%Cards per row}" field="cardsPerRow">
+      <f:number clazz="positive-number" min="1" max="6" default="4"/>
+    </f:entry>
+    <f:entry title="${%Seconds between refreshes}" field="refreshSeconds">
+      <f:number clazz="positive-number" min="3" default="10"/>
+    </f:entry>
+    <f:entry title="${%Group by}" field="groupPattern">
+      <f:textbox/>
+    </f:entry>
+    <f:entry field="showSyntheticStages">
+      <f:checkbox title="${%Show the stages Declarative Pipeline adds by itself}"/>
+    </f:entry>
+  </f:section>
+</j:jelly>

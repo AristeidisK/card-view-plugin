@@ -1,0 +1,10 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+  <div id="card-view-board" class="cv-board cv-cols-${it.cardsPerRow}"
+       data-cards-url="${rootURL}/${it.url}cards"
+       data-root-url="${rootURL}/"
+       data-refresh-seconds="${it.refreshSeconds}">
+    <p class="cv-message">Loading cards…</p>
+  </div>
+  <st:adjunct includes="io.jenkins.plugins.cardview.CardView.cards"/>
+</j:jelly>
